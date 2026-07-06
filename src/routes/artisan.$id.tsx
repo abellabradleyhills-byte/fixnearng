@@ -28,7 +28,7 @@ export const Route = createFileRoute("/artisan/$id")({
 });
 
 function ArtisanDetail() {
-  const { artisan: a } = Route.useLoaderData();
+  const { artisan: a } = Route.useLoaderData() as { artisan: Artisan };
 
   return (
     <PhoneFrame>
