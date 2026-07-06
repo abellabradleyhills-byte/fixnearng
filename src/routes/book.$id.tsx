@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
-import { getArtisan } from "@/lib/artisans";
+import { getArtisan, type Artisan } from "@/lib/artisans";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { ArrowLeft, Check } from "lucide-react";
@@ -24,7 +24,7 @@ const DATES = ["Today", "Tomorrow", "Wed 8", "Thu 9", "Fri 10"];
 const TIMES = ["8:00 AM", "10:00 AM", "12:00 PM", "2:00 PM", "4:00 PM", "6:00 PM"];
 
 function BookPage() {
-  const { artisan: a } = Route.useLoaderData();
+  const { artisan: a } = Route.useLoaderData() as { artisan: Artisan };
   const [date, setDate] = useState("Today");
   const [time, setTime] = useState("10:00 AM");
   const [confirmed, setConfirmed] = useState(false);
