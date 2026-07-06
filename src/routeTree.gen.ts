@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as SosRouteImport } from './routes/sos'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as RegisterRouteImport } from './routes/register'
@@ -18,6 +19,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as BookIdRouteImport } from './routes/book.$id'
 import { Route as ArtisanIdRouteImport } from './routes/artisan.$id'
 
+const WalletRoute = WalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SosRoute = SosRouteImport.update({
   id: '/sos',
   path: '/sos',
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/search': typeof SearchRoute
   '/sos': typeof SosRoute
+  '/wallet': typeof WalletRoute
   '/artisan/$id': typeof ArtisanIdRoute
   '/book/$id': typeof BookIdRoute
 }
@@ -76,6 +83,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/search': typeof SearchRoute
   '/sos': typeof SosRoute
+  '/wallet': typeof WalletRoute
   '/artisan/$id': typeof ArtisanIdRoute
   '/book/$id': typeof BookIdRoute
 }
@@ -87,6 +95,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/search': typeof SearchRoute
   '/sos': typeof SosRoute
+  '/wallet': typeof WalletRoute
   '/artisan/$id': typeof ArtisanIdRoute
   '/book/$id': typeof BookIdRoute
 }
@@ -99,6 +108,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/search'
     | '/sos'
+    | '/wallet'
     | '/artisan/$id'
     | '/book/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/search'
     | '/sos'
+    | '/wallet'
     | '/artisan/$id'
     | '/book/$id'
   id:
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/search'
     | '/sos'
+    | '/wallet'
     | '/artisan/$id'
     | '/book/$id'
   fileRoutesById: FileRoutesById
@@ -130,12 +142,20 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   SearchRoute: typeof SearchRoute
   SosRoute: typeof SosRoute
+  WalletRoute: typeof WalletRoute
   ArtisanIdRoute: typeof ArtisanIdRoute
   BookIdRoute: typeof BookIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wallet': {
+      id: '/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof WalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sos': {
       id: '/sos'
       path: '/sos'
@@ -202,6 +222,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   SearchRoute: SearchRoute,
   SosRoute: SosRoute,
+  WalletRoute: WalletRoute,
   ArtisanIdRoute: ArtisanIdRoute,
   BookIdRoute: BookIdRoute,
 }
