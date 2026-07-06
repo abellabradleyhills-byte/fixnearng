@@ -3,6 +3,7 @@ import { useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { ChevronLeft, Plus, Send, Banknote, ShieldCheck, Wallet as WalletIcon, ArrowDownLeft, ArrowUpRight, X } from "lucide-react";
+import { addMoney, useStore, type Tx } from "@/lib/store";
 
 export const Route = createFileRoute("/wallet")({
   head: () => ({
@@ -14,16 +15,14 @@ export const Route = createFileRoute("/wallet")({
   component: WalletPage,
 });
 
-type Tx = { id: string; type: "deposit" | "payment" | "refund" | "transfer"; label: string; amount: number; date: string };
-
-const TXS: Tx[] = [];
-
 type Modal = null | "add" | "transfer" | "withdraw";
 
 function WalletPage() {
   const [filter, setFilter] = useState<"all" | "deposit" | "payment" | "refund">("all");
   const [modal, setModal] = useState<Modal>(null);
-  const filtered = TXS.filter((t) => filter === "all" || t.type === filter);
+  const wallet = useStore((s) => s.wallet);
+  const txs = useStore((s) => s.txs);
+  const filtered: Tx[] = txs.filter((t) => filter === "all" || t.type === filter);
 
   return (
     <PhoneFrame className="!bg-neutral-950 text-white">
@@ -42,7 +41,7 @@ function WalletPage() {
         {/* Balance card */}
         <section className="mx-5 rounded-3xl bg-gradient-to-br from-brand-green to-emerald-700 p-5 shadow-xl">
           <p className="text-[10px] font-bold tracking-[0.2em] text-white/80">AVAILABLE BALANCE</p>
-          <p className="font-display font-bold text-5xl mt-2 text-neutral-950">₦0</p>
+          <p className="font-display font-bold text-5xl mt-2 text-neutral-950">₦{wallet.balance.toLocaleString()}</p>
           <div className="mt-4 inline-flex items-center gap-1.5 bg-black/20 rounded-full px-3 py-1.5 text-xs font-semibold">
             <ShieldCheck size={14} /> Secured
           </div>
@@ -50,8 +49,8 @@ function WalletPage() {
 
         {/* Stats */}
         <div className="mx-5 mt-4 grid grid-cols-2 gap-3">
-          <StatCard label="TOTAL DEPOSITED" value="₦0" tone="text-brand-green" />
-          <StatCard label="TOTAL SPENT" value="₦0" tone="text-emergency" />
+          <StatCard label="TOTAL DEPOSITED" value={`₦${wallet.deposited.toLocaleString()}`} tone="text-brand-green" />
+          <StatCard label="TOTAL SPENT" value={`₦${wallet.spent.toLocaleString()}`} tone="text-emergency" />
         </div>
 
         {/* Actions */}
@@ -143,10 +142,15 @@ function ActionButton({
 }
 
 function ActionSheet({ type, onClose }: { type: Exclude<Modal, null>; onClose: () => void }) {
+  const [amount, setAmount] = useState<number>(0);
   const titles = {
     add: "Add Money to Wallet",
     transfer: "Send to another user",
     withdraw: "Withdraw to Bank",
+  };
+  const submit = () => {
+    if (type === "add" && amount > 0) addMoney(amount);
+    onClose();
   };
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
@@ -174,18 +178,33 @@ function ActionSheet({ type, onClose }: { type: Exclude<Modal, null>; onClose: (
           <SheetField label="Card / bank transfer" placeholder="Choose method" />
         )}
 
-        <SheetField label="Amount (₦)" placeholder="5,000" />
+        <div className="mb-3">
+          <label className="text-[10px] font-bold tracking-widest text-white/60">Amount (₦)</label>
+          <input
+            type="number"
+            value={amount || ""}
+            onChange={(e) => setAmount(Number(e.target.value) || 0)}
+            placeholder="5,000"
+            className="mt-1 w-full h-12 rounded-xl bg-white/5 border border-white/10 px-4 text-white placeholder:text-white/30 outline-none focus:border-brand-green"
+          />
+        </div>
 
         <div className="mt-2 flex flex-wrap gap-2">
-          {[1000, 2000, 5000, 10000].map((v) => (
-            <span key={v} className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-bold">
+          {[1000, 2000, 5000, 10000, 25000].map((v) => (
+            <button
+              key={v}
+              onClick={() => setAmount(v)}
+              className={`px-3 py-1.5 rounded-full text-xs font-bold border ${
+                amount === v ? "bg-brand-yellow text-neutral-900 border-brand-yellow" : "bg-white/5 border-white/10 text-white"
+              }`}
+            >
               ₦{v.toLocaleString()}
-            </span>
+            </button>
           ))}
         </div>
 
         <button
-          onClick={onClose}
+          onClick={submit}
           className="mt-5 w-full py-4 rounded-2xl bg-brand-green text-white font-bold shadow-lg shadow-brand-green/20"
         >
           {type === "add" ? "Add money" : type === "transfer" ? "Send now" : "Withdraw"}

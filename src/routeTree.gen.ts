@@ -15,7 +15,10 @@ import { Route as SearchRouteImport } from './routes/search'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as MessagesRouteImport } from './routes/messages'
+import { Route as JobsRouteImport } from './routes/jobs'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PayJobIdRouteImport } from './routes/pay.$jobId'
+import { Route as ChatJobIdRouteImport } from './routes/chat.$jobId'
 import { Route as BookIdRouteImport } from './routes/book.$id'
 import { Route as ArtisanIdRouteImport } from './routes/artisan.$id'
 
@@ -49,9 +52,24 @@ const MessagesRoute = MessagesRouteImport.update({
   path: '/messages',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JobsRoute = JobsRouteImport.update({
+  id: '/jobs',
+  path: '/jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PayJobIdRoute = PayJobIdRouteImport.update({
+  id: '/pay/$jobId',
+  path: '/pay/$jobId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatJobIdRoute = ChatJobIdRouteImport.update({
+  id: '/chat/$jobId',
+  path: '/chat/$jobId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BookIdRoute = BookIdRouteImport.update({
@@ -67,6 +85,7 @@ const ArtisanIdRoute = ArtisanIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/jobs': typeof JobsRoute
   '/messages': typeof MessagesRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
@@ -75,9 +94,12 @@ export interface FileRoutesByFullPath {
   '/wallet': typeof WalletRoute
   '/artisan/$id': typeof ArtisanIdRoute
   '/book/$id': typeof BookIdRoute
+  '/chat/$jobId': typeof ChatJobIdRoute
+  '/pay/$jobId': typeof PayJobIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/jobs': typeof JobsRoute
   '/messages': typeof MessagesRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
@@ -86,10 +108,13 @@ export interface FileRoutesByTo {
   '/wallet': typeof WalletRoute
   '/artisan/$id': typeof ArtisanIdRoute
   '/book/$id': typeof BookIdRoute
+  '/chat/$jobId': typeof ChatJobIdRoute
+  '/pay/$jobId': typeof PayJobIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/jobs': typeof JobsRoute
   '/messages': typeof MessagesRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
@@ -98,11 +123,14 @@ export interface FileRoutesById {
   '/wallet': typeof WalletRoute
   '/artisan/$id': typeof ArtisanIdRoute
   '/book/$id': typeof BookIdRoute
+  '/chat/$jobId': typeof ChatJobIdRoute
+  '/pay/$jobId': typeof PayJobIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/jobs'
     | '/messages'
     | '/profile'
     | '/register'
@@ -111,9 +139,12 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/artisan/$id'
     | '/book/$id'
+    | '/chat/$jobId'
+    | '/pay/$jobId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/jobs'
     | '/messages'
     | '/profile'
     | '/register'
@@ -122,9 +153,12 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/artisan/$id'
     | '/book/$id'
+    | '/chat/$jobId'
+    | '/pay/$jobId'
   id:
     | '__root__'
     | '/'
+    | '/jobs'
     | '/messages'
     | '/profile'
     | '/register'
@@ -133,10 +167,13 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/artisan/$id'
     | '/book/$id'
+    | '/chat/$jobId'
+    | '/pay/$jobId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  JobsRoute: typeof JobsRoute
   MessagesRoute: typeof MessagesRoute
   ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
@@ -145,6 +182,8 @@ export interface RootRouteChildren {
   WalletRoute: typeof WalletRoute
   ArtisanIdRoute: typeof ArtisanIdRoute
   BookIdRoute: typeof BookIdRoute
+  ChatJobIdRoute: typeof ChatJobIdRoute
+  PayJobIdRoute: typeof PayJobIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -191,11 +230,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/jobs': {
+      id: '/jobs'
+      path: '/jobs'
+      fullPath: '/jobs'
+      preLoaderRoute: typeof JobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pay/$jobId': {
+      id: '/pay/$jobId'
+      path: '/pay/$jobId'
+      fullPath: '/pay/$jobId'
+      preLoaderRoute: typeof PayJobIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chat/$jobId': {
+      id: '/chat/$jobId'
+      path: '/chat/$jobId'
+      fullPath: '/chat/$jobId'
+      preLoaderRoute: typeof ChatJobIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/book/$id': {
@@ -217,6 +277,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  JobsRoute: JobsRoute,
   MessagesRoute: MessagesRoute,
   ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
@@ -225,6 +286,8 @@ const rootRouteChildren: RootRouteChildren = {
   WalletRoute: WalletRoute,
   ArtisanIdRoute: ArtisanIdRoute,
   BookIdRoute: BookIdRoute,
+  ChatJobIdRoute: ChatJobIdRoute,
+  PayJobIdRoute: PayJobIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
