@@ -75,14 +75,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "FixNear — Verified artisans near you in Nigeria" },
+      { title: "FixNear — Find verified artisans near you" },
       {
         name: "description",
         content:
           "Find NIN-verified mechanics, plumbers, electricians, painters and laborers near you across Nigeria. Emergency roadside help in one tap.",
       },
       { name: "theme-color", content: "#008751" },
-      { property: "og:title", content: "FixNear — Verified artisans near you" },
+      { property: "og:title", content: "FixNear — Find verified artisans near you" },
       {
         property: "og:description",
         content:
@@ -90,6 +90,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "FixNear — Find verified artisans near you" },
+      { name: "description", content: "Search NIN-verified mechanics, plumbers and electricians nearby. Emergency roadside SOS built in." },
+      { property: "og:description", content: "Search NIN-verified mechanics, plumbers and electricians nearby. Emergency roadside SOS built in." },
+      { name: "twitter:description", content: "Search NIN-verified mechanics, plumbers and electricians nearby. Emergency roadside SOS built in." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/c670516e-0f59-421f-bf14-4af04a18cfc8" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/c670516e-0f59-421f-bf14-4af04a18cfc8" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
