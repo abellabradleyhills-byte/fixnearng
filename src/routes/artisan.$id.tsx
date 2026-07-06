@@ -1,11 +1,11 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { getArtisan } from "@/lib/artisans";
+import { getArtisan, type Artisan } from "@/lib/artisans";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { ArrowLeft, Phone, MessageCircle, Star, MapPin, Briefcase, ShieldCheck, Share2 } from "lucide-react";
 
 export const Route = createFileRoute("/artisan/$id")({
-  loader: ({ params }) => {
+  loader: ({ params }): { artisan: Artisan } => {
     const artisan = getArtisan(params.id);
     if (!artisan) throw notFound();
     return { artisan };
