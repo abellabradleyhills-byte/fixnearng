@@ -66,11 +66,11 @@ function Profile() {
             subtitle="Balance, deposits & payments"
           />
           <MenuItem
-            to="/profile"
+            to="/jobs"
             iconWrap="bg-white/10"
             icon={<Calendar size={18} className="text-white" />}
-            title="My bookings"
-            subtitle="View your job history"
+            title="Track My Jobs"
+            subtitle="Live status & milestone timeline"
           />
           <MenuItem
             to="/register"

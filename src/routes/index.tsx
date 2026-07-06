@@ -91,6 +91,23 @@ function Home() {
           </div>
         </section>
 
+        {/* Track my jobs */}
+        <section className="px-5 mt-5">
+          <Link
+            to="/jobs"
+            className="flex items-center gap-3 p-4 rounded-2xl border border-brand-green/30 bg-brand-green/5"
+          >
+            <div className="size-11 rounded-xl bg-brand-green/15 flex items-center justify-center text-brand-green">
+              🧰
+            </div>
+            <div className="flex-1">
+              <p className="font-bold text-sm">Track My Jobs</p>
+              <p className="text-[11px] text-muted-foreground">Live status & milestone timeline</p>
+            </div>
+            <span className="text-brand-green">→</span>
+          </Link>
+        </section>
+
         {/* Categories */}
         <section className="px-5 mt-6">
           <div className="flex items-end justify-between mb-3">

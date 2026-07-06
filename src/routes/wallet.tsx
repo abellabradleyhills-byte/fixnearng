@@ -3,6 +3,7 @@ import { useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { ChevronLeft, Plus, Send, Banknote, ShieldCheck, Wallet as WalletIcon, ArrowDownLeft, ArrowUpRight, X } from "lucide-react";
+import { addMoney, useStore, type Tx } from "@/lib/store";
 
 export const Route = createFileRoute("/wallet")({
   head: () => ({
@@ -13,10 +14,6 @@ export const Route = createFileRoute("/wallet")({
   }),
   component: WalletPage,
 });
-
-type Tx = { id: string; type: "deposit" | "payment" | "refund" | "transfer"; label: string; amount: number; date: string };
-
-const TXS: Tx[] = [];
 
 type Modal = null | "add" | "transfer" | "withdraw";
 
