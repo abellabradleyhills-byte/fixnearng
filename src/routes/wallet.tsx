@@ -20,7 +20,9 @@ type Modal = null | "add" | "transfer" | "withdraw";
 function WalletPage() {
   const [filter, setFilter] = useState<"all" | "deposit" | "payment" | "refund">("all");
   const [modal, setModal] = useState<Modal>(null);
-  const filtered = TXS.filter((t) => filter === "all" || t.type === filter);
+  const wallet = useStore((s) => s.wallet);
+  const txs = useStore((s) => s.txs);
+  const filtered: Tx[] = txs.filter((t) => filter === "all" || t.type === filter);
 
   return (
     <PhoneFrame className="!bg-neutral-950 text-white">
@@ -39,7 +41,7 @@ function WalletPage() {
         {/* Balance card */}
         <section className="mx-5 rounded-3xl bg-gradient-to-br from-brand-green to-emerald-700 p-5 shadow-xl">
           <p className="text-[10px] font-bold tracking-[0.2em] text-white/80">AVAILABLE BALANCE</p>
-          <p className="font-display font-bold text-5xl mt-2 text-neutral-950">₦0</p>
+          <p className="font-display font-bold text-5xl mt-2 text-neutral-950">₦{wallet.balance.toLocaleString()}</p>
           <div className="mt-4 inline-flex items-center gap-1.5 bg-black/20 rounded-full px-3 py-1.5 text-xs font-semibold">
             <ShieldCheck size={14} /> Secured
           </div>
@@ -47,8 +49,8 @@ function WalletPage() {
 
         {/* Stats */}
         <div className="mx-5 mt-4 grid grid-cols-2 gap-3">
-          <StatCard label="TOTAL DEPOSITED" value="₦0" tone="text-brand-green" />
-          <StatCard label="TOTAL SPENT" value="₦0" tone="text-emergency" />
+          <StatCard label="TOTAL DEPOSITED" value={`₦${wallet.deposited.toLocaleString()}`} tone="text-brand-green" />
+          <StatCard label="TOTAL SPENT" value={`₦${wallet.spent.toLocaleString()}`} tone="text-emergency" />
         </div>
 
         {/* Actions */}
