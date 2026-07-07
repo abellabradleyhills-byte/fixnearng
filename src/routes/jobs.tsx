@@ -101,7 +101,6 @@ function JobCard({ job }: { job: Job }) {
     { pending: 0, confirmed: 1, enroute: 2, completed: 3, paid: 3 } as Record<JobStatus, number>
   )[job.status];
 
-  const paymentBlocked = !job.finalPaid;
   const materialsBlocked = job.materials && !job.materials.paid;
 
   return (
