@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as SosRouteImport } from './routes/sos'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -30,6 +31,11 @@ const WalletRoute = WalletRouteImport.update({
 const SosRoute = SosRouteImport.update({
   id: '/sos',
   path: '/sos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SearchRoute = SearchRouteImport.update({
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
   '/sos': typeof SosRoute
   '/wallet': typeof WalletRoute
   '/artisan/$id': typeof ArtisanIdRoute
@@ -104,6 +111,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
   '/sos': typeof SosRoute
   '/wallet': typeof WalletRoute
   '/artisan/$id': typeof ArtisanIdRoute
@@ -119,6 +127,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
   '/sos': typeof SosRoute
   '/wallet': typeof WalletRoute
   '/artisan/$id': typeof ArtisanIdRoute
@@ -135,6 +144,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/register'
     | '/search'
+    | '/settings'
     | '/sos'
     | '/wallet'
     | '/artisan/$id'
@@ -149,6 +159,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/register'
     | '/search'
+    | '/settings'
     | '/sos'
     | '/wallet'
     | '/artisan/$id'
@@ -163,6 +174,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/register'
     | '/search'
+    | '/settings'
     | '/sos'
     | '/wallet'
     | '/artisan/$id'
@@ -178,6 +190,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
   SearchRoute: typeof SearchRoute
+  SettingsRoute: typeof SettingsRoute
   SosRoute: typeof SosRoute
   WalletRoute: typeof WalletRoute
   ArtisanIdRoute: typeof ArtisanIdRoute
@@ -200,6 +213,13 @@ declare module '@tanstack/react-router' {
       path: '/sos'
       fullPath: '/sos'
       preLoaderRoute: typeof SosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/search': {
@@ -282,6 +302,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
   SearchRoute: SearchRoute,
+  SettingsRoute: SettingsRoute,
   SosRoute: SosRoute,
   WalletRoute: WalletRoute,
   ArtisanIdRoute: ArtisanIdRoute,

@@ -80,7 +80,7 @@ function Profile() {
             subtitle="Upload NIN & utility bill"
           />
           <MenuItem
-            to="/profile"
+            to="/settings"
             iconWrap="bg-white/10"
             icon={<SettingsIcon size={18} className="text-white" />}
             title="Settings"
