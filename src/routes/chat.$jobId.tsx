@@ -29,12 +29,18 @@ function ChatPage() {
 
   if (!job) return null;
 
+  const materialsDue = !!job.materials && !job.materials.paid;
+  const finalDue = job.status === "completed" && !job.finalPaid && !!job.finalAmount;
+  const payDue = materialsDue || finalDue;
+
   const submit = () => {
     if (!text.trim()) return;
     sendMessage(job.id, text, "customer");
     setText("");
-    // simulate artisan reply after a moment
-    setTimeout(() => sendMessage(job.id, "Noted, sir. I dey come.", "artisan"), 1200);
+    // Only simulate an artisan reply if the user has chat notifications on
+    if (getPrefs().chatMessages) {
+      setTimeout(() => sendMessage(job.id, "Noted, sir. I dey come.", "artisan"), 1200);
+    }
   };
 
   return (
@@ -53,15 +59,18 @@ function ChatPage() {
             <p className="text-[11px] text-white/50 truncate">{job.category} · {job.location}</p>
           </div>
           <button
+            disabled={!payDue}
             onClick={() =>
+              payDue &&
               navigate({
                 to: "/pay/$jobId",
                 params: { jobId: job.id },
-                search: { kind: job.materials && !job.materials.paid ? "materials" : "final" },
+                search: { kind: materialsDue ? "materials" : "final" },
               })
             }
-            className="size-10 rounded-full bg-brand-green/20 text-brand-green flex items-center justify-center"
-            aria-label="Pay"
+            className="size-10 rounded-full bg-brand-green/20 text-brand-green flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label={payDue ? "Pay with FixNear Wallet" : "No payment due"}
+            title={payDue ? "Pay with FixNear Wallet" : "No payment due yet"}
           >
             <WalletIcon size={18} />
           </button>
