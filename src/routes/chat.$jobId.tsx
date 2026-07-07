@@ -2,7 +2,9 @@ import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-ro
 import { useEffect, useRef, useState } from "react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { getJob, sendMessage, useStore } from "@/lib/store";
+import { getPrefs } from "@/lib/prefs";
 import { ChevronLeft, Send, ShieldCheck, Wallet as WalletIcon } from "lucide-react";
+
 
 export const Route = createFileRoute("/chat/$jobId")({
   loader: ({ params }) => {
