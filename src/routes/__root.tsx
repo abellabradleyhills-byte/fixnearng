@@ -130,6 +130,9 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(() => {
+    import("../lib/prefs").then(({ applyTheme }) => applyTheme());
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />

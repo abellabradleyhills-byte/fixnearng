@@ -101,7 +101,6 @@ function JobCard({ job }: { job: Job }) {
     { pending: 0, confirmed: 1, enroute: 2, completed: 3, paid: 3 } as Record<JobStatus, number>
   )[job.status];
 
-  const paymentBlocked = !job.finalPaid;
   const materialsBlocked = job.materials && !job.materials.paid;
 
   return (
@@ -208,11 +207,7 @@ function JobCard({ job }: { job: Job }) {
           <ChevronRight size={16} className="text-white/50" />
         </Link>
 
-        <button
-          disabled={!materialsBlocked && paymentBlocked && job.status !== "completed"}
-          onClick={() => setFlash(paymentBlocked && job.status !== "completed" && !materialsBlocked ? "No pending payment yet." : null)}
-          className="w-full"
-        >
+        {(materialsBlocked || (job.status === "completed" && !job.finalPaid)) ? (
           <Link
             to="/pay/$jobId"
             params={{ jobId: job.id }}
@@ -225,7 +220,22 @@ function JobCard({ job }: { job: Job }) {
             </span>
             <ChevronRight size={16} />
           </Link>
-        </button>
+        ) : (
+          <div
+            aria-disabled
+            className="w-full py-3 rounded-xl border border-white/10 text-white/40 font-bold text-sm flex items-center justify-between px-4 cursor-not-allowed"
+            title={
+              job.finalPaid
+                ? "Payment already confirmed"
+                : "Payment unlocks when the artisan requests materials or marks the job complete."
+            }
+          >
+            <span className="flex items-center gap-2">
+              <WalletIcon size={16} />
+              {job.finalPaid ? "Payment confirmed" : "No payment due yet"}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Demo simulate */}

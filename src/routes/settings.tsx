@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 import { PhoneFrame } from "@/components/PhoneFrame";
+import { usePrefs, setPref, type Prefs } from "@/lib/prefs";
 import {
   ChevronLeft,
   ChevronRight,
@@ -25,49 +25,10 @@ export const Route = createFileRoute("/settings")({
   component: SettingsPage,
 });
 
-type Prefs = {
-  theme: "light" | "dark" | "system";
-  language: "english" | "pidgin" | "yoruba" | "hausa" | "igbo";
-  jobAlerts: boolean;
-  chatMessages: boolean;
-  marketing: boolean;
-  shareLocation: boolean;
-  hidePhone: boolean;
-};
-
-const KEY = "fixnear:settings:v1";
-const DEFAULTS: Prefs = {
-  theme: "light",
-  language: "english",
-  jobAlerts: true,
-  chatMessages: true,
-  marketing: false,
-  shareLocation: true,
-  hidePhone: false,
-};
-
-function usePrefs() {
-  const [prefs, setPrefs] = useState<Prefs>(DEFAULTS);
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(KEY);
-      if (raw) setPrefs({ ...DEFAULTS, ...JSON.parse(raw) });
-    } catch {}
-  }, []);
-  const update = <K extends keyof Prefs>(k: K, v: Prefs[K]) => {
-    setPrefs((p) => {
-      const next = { ...p, [k]: v };
-      try {
-        localStorage.setItem(KEY, JSON.stringify(next));
-      } catch {}
-      return next;
-    });
-  };
-  return [prefs, update] as const;
-}
-
 function SettingsPage() {
-  const [prefs, update] = usePrefs();
+  const prefs = usePrefs();
+  const update = <K extends keyof Prefs>(k: K, v: Prefs[K]) => setPref(k, v);
+
 
   return (
     <PhoneFrame>

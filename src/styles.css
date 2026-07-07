@@ -80,6 +80,28 @@
   --paper-line: oklch(0.87 0.025 95);
 }
 
+.dark {
+  --background: oklch(0.16 0.02 150);
+  --foreground: oklch(0.97 0.01 100);
+  --card: oklch(0.2 0.02 150);
+  --card-foreground: oklch(0.97 0.01 100);
+  --popover: oklch(0.2 0.02 150);
+  --popover-foreground: oklch(0.97 0.01 100);
+  --primary: oklch(0.62 0.15 155);
+  --primary-foreground: oklch(0.1 0.02 150);
+  --secondary: oklch(0.26 0.02 150);
+  --secondary-foreground: oklch(0.97 0.01 100);
+  --muted: oklch(0.24 0.02 150);
+  --muted-foreground: oklch(0.72 0.02 150);
+  --accent: oklch(0.28 0.03 150);
+  --accent-foreground: oklch(0.97 0.01 100);
+  --border: oklch(0.3 0.02 150);
+  --input: oklch(0.3 0.02 150);
+  --ring: oklch(0.62 0.15 155);
+  --paper: oklch(0.22 0.02 100);
+  --paper-line: oklch(0.35 0.02 100);
+}
+
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
