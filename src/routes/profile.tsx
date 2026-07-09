@@ -52,7 +52,7 @@ function Profile() {
         {/* Menu list */}
         <section className="mx-4 mt-5 rounded-2xl border border-white/10 bg-white/[0.03] divide-y divide-white/10 overflow-hidden">
           <MenuItem
-            to="/profile"
+            to="/rewards"
             iconWrap="bg-brand-yellow/20"
             icon={<Star size={18} className="text-brand-yellow" />}
             title="Rewards & Reminders"

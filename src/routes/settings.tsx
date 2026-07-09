@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { usePrefs, setPref, type Prefs } from "@/lib/prefs";
 import {
@@ -18,6 +19,8 @@ import {
   LifeBuoy,
   Info,
   Share2,
+  X,
+  Check,
 } from "lucide-react";
 
 export const Route = createFileRoute("/settings")({
@@ -25,20 +28,57 @@ export const Route = createFileRoute("/settings")({
   component: SettingsPage,
 });
 
+type Modal = null | "password" | "rate" | "about";
+
 function SettingsPage() {
   const prefs = usePrefs();
   const update = <K extends keyof Prefs>(k: K, v: Prefs[K]) => setPref(k, v);
+  const [modal, setModal] = useState<Modal>(null);
+  const [flash, setFlash] = useState<string | null>(null);
+  const [rating, setRating] = useState(5);
+  const [pw, setPw] = useState({ current: "", next: "", confirm: "" });
 
+  const toast = (m: string) => {
+    setFlash(m);
+    setTimeout(() => setFlash(null), 2000);
+  };
+
+  const share = async () => {
+    const shareData = {
+      title: "FixNear",
+      text: "Find verified artisans near you across Nigeria.",
+      url: typeof window !== "undefined" ? window.location.origin : "https://fixnearng.lovable.app",
+    };
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) {
+        await navigator.share(shareData);
+      } else if (typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(shareData.url);
+        toast("Link copied to clipboard");
+      }
+    } catch {
+      /* user cancelled */
+    }
+  };
+
+  const submitPassword = () => {
+    if (pw.next.length < 6) return toast("New password too short");
+    if (pw.next !== pw.confirm) return toast("Passwords do not match");
+    setPw({ current: "", next: "", confirm: "" });
+    setModal(null);
+    toast("Password updated");
+  };
+
+  const submitRating = () => {
+    setModal(null);
+    toast(`Thanks for rating ${rating}★`);
+  };
 
   return (
     <PhoneFrame>
       <div className="pb-24 animate-screen-entry">
         <header className="px-5 pt-10 pb-4 flex items-center gap-3">
-          <Link
-            to="/profile"
-            className="size-10 rounded-full bg-muted flex items-center justify-center"
-            aria-label="Back"
-          >
+          <Link to="/profile" className="size-10 rounded-full bg-muted flex items-center justify-center" aria-label="Back">
             <ChevronLeft size={20} />
           </Link>
           <h1 className="text-2xl font-display font-bold">Settings</h1>
@@ -84,9 +124,7 @@ function SettingsPage() {
                   key={l.id}
                   onClick={() => update("language", l.id as Prefs["language"])}
                   className={`h-11 rounded-xl text-sm font-bold transition-colors ${
-                    prefs.language === l.id
-                      ? "bg-brand-green text-white"
-                      : "bg-muted text-foreground"
+                    prefs.language === l.id ? "bg-brand-green text-white" : "bg-muted text-foreground"
                   }`}
                 >
                   {l.label}
@@ -139,29 +177,146 @@ function SettingsPage() {
 
         <Group title="Account">
           <LinkRow to="/profile" icon={<UserIcon size={18} className="text-brand-green" />} title="Edit Profile" />
-          <LinkRow to="/profile" icon={<Lock size={18} className="text-brand-green" />} title="Change Password" />
+          <ButtonRow
+            onClick={() => setModal("password")}
+            icon={<Lock size={18} className="text-brand-green" />}
+            title="Change Password"
+          />
         </Group>
 
         <Group title="More">
-          <LinkRow to="/settings" icon={<Star size={18} className="text-brand-yellow" />} title="Rate the app" />
-          <LinkRow to="/messages" icon={<LifeBuoy size={18} className="text-brand-green" />} title="Contact support" />
-          <LinkRow to="/settings" icon={<Info size={18} className="text-brand-green" />} title="About FixNear" />
-          <LinkRow to="/settings" icon={<Share2 size={18} className="text-brand-green" />} title="Share with friends" />
+          <ButtonRow
+            onClick={() => setModal("rate")}
+            icon={<Star size={18} className="text-brand-yellow" />}
+            title="Rate the app"
+          />
+          <LinkRow
+            to="/messages"
+            icon={<LifeBuoy size={18} className="text-brand-green" />}
+            title="Contact support"
+          />
+          <ButtonRow
+            onClick={() => setModal("about")}
+            icon={<Info size={18} className="text-brand-green" />}
+            title="About FixNear"
+          />
+          <ButtonRow
+            onClick={share}
+            icon={<Share2 size={18} className="text-brand-green" />}
+            title="Share with friends"
+          />
         </Group>
+
+        {flash && (
+          <div className="fixed left-1/2 -translate-x-1/2 bottom-24 z-50 px-4 py-2 rounded-full bg-foreground text-background text-xs font-bold shadow-xl">
+            {flash}
+          </div>
+        )}
       </div>
+
+      {modal && <Modal onClose={() => setModal(null)}>
+        {modal === "password" && (
+          <>
+            <h3 className="font-display font-bold text-lg">Change Password</h3>
+            <p className="text-xs text-muted-foreground">Choose a strong password with 6+ characters.</p>
+            <input
+              type="password"
+              placeholder="Current password"
+              value={pw.current}
+              onChange={(e) => setPw({ ...pw, current: e.target.value })}
+              className="mt-4 w-full h-11 px-3 rounded-xl bg-muted border border-border text-sm outline-none"
+            />
+            <input
+              type="password"
+              placeholder="New password"
+              value={pw.next}
+              onChange={(e) => setPw({ ...pw, next: e.target.value })}
+              className="mt-2 w-full h-11 px-3 rounded-xl bg-muted border border-border text-sm outline-none"
+            />
+            <input
+              type="password"
+              placeholder="Confirm new password"
+              value={pw.confirm}
+              onChange={(e) => setPw({ ...pw, confirm: e.target.value })}
+              className="mt-2 w-full h-11 px-3 rounded-xl bg-muted border border-border text-sm outline-none"
+            />
+            <button
+              onClick={submitPassword}
+              className="mt-4 w-full py-3 rounded-xl bg-brand-green text-white font-bold text-sm"
+            >
+              Update password
+            </button>
+          </>
+        )}
+        {modal === "rate" && (
+          <>
+            <h3 className="font-display font-bold text-lg">Rate FixNear</h3>
+            <p className="text-xs text-muted-foreground">Tell us how we're doing.</p>
+            <div className="flex justify-center gap-1 mt-4">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button key={n} onClick={() => setRating(n)}>
+                  <Star size={32} className={n <= rating ? "fill-brand-yellow text-brand-yellow" : "text-muted-foreground/40"} />
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={submitRating}
+              className="mt-4 w-full py-3 rounded-xl bg-brand-green text-white font-bold text-sm"
+            >
+              Submit rating
+            </button>
+          </>
+        )}
+        {modal === "about" && (
+          <>
+            <h3 className="font-display font-bold text-lg">About FixNear</h3>
+            <p className="text-xs text-muted-foreground mt-1">Version 1.0.0</p>
+            <p className="text-sm mt-4 leading-relaxed">
+              FixNear connects Nigerians with NIN + BVN verified artisans — mechanics, plumbers, electricians, painters and more. Every payment is held securely in FixNear Pay until the job is done.
+            </p>
+            <div className="mt-4 rounded-xl bg-muted p-3 text-xs space-y-1">
+              <p><span className="font-bold">Built in:</span> Nigeria 🇳🇬</p>
+              <p><span className="font-bold">Verification:</span> NIN, BVN, Home address</p>
+              <p><span className="font-bold">Support:</span> 24/7 via in-app chat</p>
+            </div>
+            <button
+              onClick={() => setModal(null)}
+              className="mt-4 w-full py-3 rounded-xl bg-brand-green text-white font-bold text-sm inline-flex items-center justify-center gap-2"
+            >
+              <Check size={16} /> Got it
+            </button>
+          </>
+        )}
+      </Modal>}
     </PhoneFrame>
+  );
+}
+
+function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50" onClick={onClose}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-[430px] bg-card rounded-t-3xl sm:rounded-3xl p-5 animate-screen-entry relative"
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 size-8 rounded-full bg-muted flex items-center justify-center"
+          aria-label="Close"
+        >
+          <X size={16} />
+        </button>
+        {children}
+      </div>
+    </div>
   );
 }
 
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="px-4 mt-5">
-      <p className="text-[11px] font-bold tracking-widest text-muted-foreground mb-2 px-1">
-        {title.toUpperCase()}
-      </p>
-      <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">
-        {children}
-      </div>
+      <p className="text-[11px] font-bold tracking-widest text-muted-foreground mb-2 px-1">{title.toUpperCase()}</p>
+      <div className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden">{children}</div>
     </section>
   );
 }
@@ -203,20 +358,22 @@ function ToggleRow({
   );
 }
 
-function LinkRow({
-  to,
-  icon,
-  title,
-}: {
-  to: string;
-  icon: React.ReactNode;
-  title: string;
-}) {
+function LinkRow({ to, icon, title }: { to: string; icon: React.ReactNode; title: string }) {
   return (
     <Link to={to} className="flex items-center gap-4 p-4">
       <div className="shrink-0">{icon}</div>
       <p className="flex-1 font-bold text-sm">{title}</p>
       <ChevronRight size={18} className="text-muted-foreground" />
     </Link>
+  );
+}
+
+function ButtonRow({ onClick, icon, title }: { onClick: () => void; icon: React.ReactNode; title: string }) {
+  return (
+    <button onClick={onClick} className="w-full flex items-center gap-4 p-4 text-left">
+      <div className="shrink-0">{icon}</div>
+      <p className="flex-1 font-bold text-sm">{title}</p>
+      <ChevronRight size={18} className="text-muted-foreground" />
+    </button>
   );
 }

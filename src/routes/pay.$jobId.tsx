@@ -2,8 +2,18 @@ import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-ro
 import { useState } from "react";
 import { z } from "zod";
 import { PhoneFrame } from "@/components/PhoneFrame";
-import { getJob, useStore, payMaterials, payFinal, addMoney } from "@/lib/store";
-import { ChevronLeft, ShieldCheck, Package, Wrench, Check, Plus } from "lucide-react";
+import { getJob, getReceipt, useStore, payMaterials, payFinal, addMoney } from "@/lib/store";
+import {
+  ChevronLeft,
+  ShieldCheck,
+  Package,
+  Wrench,
+  Check,
+  Plus,
+  Copy,
+  Share2,
+  MessageCircle,
+} from "lucide-react";
 
 const searchSchema = z.object({ kind: z.enum(["materials", "final"]).default("materials") });
 
@@ -25,7 +35,7 @@ function PayPage() {
   const balance = useStore((s) => s.wallet.balance);
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState(false);
+  const [receiptId, setReceiptId] = useState<string | null>(null);
   const [topup, setTopup] = useState(0);
 
   if (!job) return null;
@@ -40,32 +50,13 @@ function PayPage() {
     setError(null);
     const res = isFinal ? payFinal(job.id) : payMaterials(job.id);
     if (!res.ok) return setError(res.error ?? "Payment failed");
-    setDone(true);
+    setReceiptId(res.receiptId ?? null);
   };
 
-  if (done) {
-    return (
-      <PhoneFrame className="!bg-neutral-950 text-white">
-        <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center">
-          <div className="size-20 rounded-full bg-brand-green flex items-center justify-center">
-            <Check size={40} strokeWidth={3} />
-          </div>
-          <h1 className="text-2xl font-display font-bold mt-5">Payment confirmed</h1>
-          <p className="text-sm text-white/70 mt-2 max-w-[30ch]">
-            ₦{amount.toLocaleString()} sent securely to {job.artisanName} via FixNear Pay.
-          </p>
-          {isFinal && (
-            <p className="text-xs text-brand-yellow mt-3">You can now leave a review on the job.</p>
-          )}
-          <Link
-            to="/jobs"
-            className="mt-8 w-full py-4 rounded-2xl bg-brand-green text-white font-bold text-center"
-          >
-            Back to My Jobs
-          </Link>
-        </div>
-      </PhoneFrame>
-    );
+  if (receiptId) {
+    const r = getReceipt(receiptId);
+    if (!r) return null;
+    return <ReceiptView receiptId={r.id} isFinal={isFinal} />;
   }
 
   return (
@@ -106,9 +97,7 @@ function PayPage() {
                 {isFinal ? "JOB PAYMENT" : "MATERIALS REQUESTED"}
               </p>
               <p className="text-sm text-white/80 mt-1">
-                {isFinal
-                  ? "Paid once the artisan marks the job complete."
-                  : job.materials?.description}
+                {isFinal ? "Paid once the artisan marks the job complete." : job.materials?.description}
               </p>
             </div>
           </div>
@@ -183,5 +172,131 @@ function PayPage() {
         </section>
       </div>
     </PhoneFrame>
+  );
+}
+
+function ReceiptView({ receiptId, isFinal }: { receiptId: string; isFinal: boolean }) {
+  const r = useStore((s) => s.receipts.find((x) => x.id === receiptId));
+  const [copied, setCopied] = useState(false);
+  if (!r) return null;
+
+  const dt = new Date(r.at);
+  const dateStr = dt.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const copyRef = async () => {
+    try {
+      await navigator.clipboard.writeText(r.reference);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch { /* noop */ }
+  };
+
+  const share = async () => {
+    const text = `FixNear receipt ${r.reference}\n₦${r.amount.toLocaleString()} paid to ${r.artisanName}`;
+    try {
+      if (navigator.share) await navigator.share({ title: "FixNear Receipt", text });
+      else await navigator.clipboard.writeText(text);
+    } catch { /* noop */ }
+  };
+
+  return (
+    <PhoneFrame className="!bg-neutral-950 text-white">
+      <div className="min-h-screen px-5 pt-10 pb-8 animate-screen-entry">
+        <div className="flex flex-col items-center text-center">
+          <div className="size-20 rounded-full bg-brand-green flex items-center justify-center shadow-lg shadow-brand-green/40">
+            <Check size={40} strokeWidth={3} />
+          </div>
+          <h1 className="text-2xl font-display font-bold mt-5">Payment confirmed</h1>
+          <p className="text-sm text-white/70 mt-2 max-w-[32ch]">
+            ₦{r.amount.toLocaleString()} sent securely to {r.artisanName} via FixNear Pay.
+          </p>
+          {isFinal && (
+            <p className="text-xs text-brand-yellow mt-2">
+              +100 loyalty points earned · You can now leave a review.
+            </p>
+          )}
+        </div>
+
+        {/* Ticket-style receipt */}
+        <section className="mt-7 rounded-3xl bg-white text-neutral-900 p-5 shadow-xl relative overflow-hidden">
+          <div className="absolute -left-2 top-1/2 size-4 rounded-full bg-neutral-950" />
+          <div className="absolute -right-2 top-1/2 size-4 rounded-full bg-neutral-950" />
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold tracking-[0.2em] text-neutral-500">FIXNEAR PAY</p>
+              <p className="font-display font-bold text-lg">Official Receipt</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] font-bold tracking-widest text-neutral-500">STATUS</p>
+              <p className="text-brand-green font-bold text-sm">PAID</p>
+            </div>
+          </div>
+
+          <div className="my-4 border-t border-dashed border-neutral-300" />
+
+          <div className="space-y-3 text-sm">
+            <Row label="Amount" value={<span className="font-display font-bold text-lg">₦{r.amount.toLocaleString()}</span>} />
+            <Row label="Type" value={r.kind === "materials" ? "Materials upfront" : "Final job payment"} />
+            <Row label="Paid to" value={`${r.artisanName} · ${r.category}`} />
+            <Row label="Date" value={dateStr} />
+            <Row
+              label="Reference"
+              value={
+                <button onClick={copyRef} className="inline-flex items-center gap-1 font-mono text-xs">
+                  {r.reference}
+                  <Copy size={12} className="text-neutral-400" />
+                </button>
+              }
+            />
+            {copied && <p className="text-[11px] text-brand-green text-right">Copied</p>}
+          </div>
+
+          <div className="my-4 border-t border-dashed border-neutral-300" />
+
+          <p className="text-[11px] text-neutral-500 text-center flex items-center justify-center gap-1">
+            <ShieldCheck size={12} className="text-brand-green" /> Held securely by FixNear Pay
+          </p>
+        </section>
+
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          <button
+            onClick={share}
+            className="py-3 rounded-2xl border border-white/15 bg-white/[0.03] font-bold text-sm flex items-center justify-center gap-2"
+          >
+            <Share2 size={14} /> Share
+          </button>
+          <Link
+            to="/chat/$jobId"
+            params={{ jobId: r.jobId }}
+            className="py-3 rounded-2xl border border-white/15 bg-white/[0.03] font-bold text-sm flex items-center justify-center gap-2"
+          >
+            <MessageCircle size={14} /> Message
+          </Link>
+        </div>
+
+        <Link
+          to="/jobs"
+          className="mt-3 block w-full py-4 rounded-2xl bg-brand-green text-white font-bold text-center"
+        >
+          Back to My Jobs
+        </Link>
+      </div>
+    </PhoneFrame>
+  );
+}
+
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <span className="text-[11px] font-bold tracking-widest text-neutral-500 pt-1">{label.toUpperCase()}</span>
+      <span className="text-right">{value}</span>
+    </div>
   );
 }
