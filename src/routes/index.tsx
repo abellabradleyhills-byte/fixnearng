@@ -33,13 +33,7 @@ function Home() {
             </p>
             <h1 className="text-2xl font-display font-bold mt-0.5">Good afternoon, Adebayo 👋</h1>
           </div>
-          <button
-            aria-label="Notifications"
-            className="size-11 rounded-full bg-brand-yellow ring-2 ring-white shadow flex items-center justify-center relative"
-          >
-            <Bell size={18} className="text-foreground" />
-            <span className="absolute top-1 right-1 size-2 rounded-full bg-emergency ring-2 ring-brand-yellow" />
-          </button>
+          <NotifBell />
         </header>
 
         {/* Search */}
