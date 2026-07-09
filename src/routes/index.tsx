@@ -3,6 +3,7 @@ import { ARTISANS, CATEGORIES } from "@/lib/artisans";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { BottomNav } from "@/components/BottomNav";
 import { PhoneFrame } from "@/components/PhoneFrame";
+import { useStore } from "@/lib/store";
 import { Search, MapPin, Siren, Star, Bell, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -196,5 +197,23 @@ function Home() {
 
       <BottomNav />
     </PhoneFrame>
+  );
+}
+
+function NotifBell() {
+  const unread = useStore((s) => s.notifications.filter((n) => !n.read).length);
+  return (
+    <Link
+      to="/notifications"
+      aria-label="Notifications"
+      className="size-11 rounded-full bg-brand-yellow ring-2 ring-white shadow flex items-center justify-center relative"
+    >
+      <Bell size={18} className="text-foreground" />
+      {unread > 0 && (
+        <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-emergency text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-brand-yellow">
+          {unread > 9 ? "9+" : unread}
+        </span>
+      )}
+    </Link>
   );
 }
