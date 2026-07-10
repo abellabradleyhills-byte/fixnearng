@@ -95,7 +95,7 @@ function Messages() {
         <div className="px-4 mt-4 space-y-2">
           {tab === "booking" ? (
             bookingChats.length === 0 ? (
-              <Empty label="You have no active bookings yet." cta={{ to: "/search", label: "Find an artisan" }} />
+              <Empty label="You have no active bookings yet." ctaLabel="Find an artisan" />
             ) : (
               bookingChats.map((j) => <BookingRow key={j.id} job={j} />)
             )
