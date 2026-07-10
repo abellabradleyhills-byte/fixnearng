@@ -145,9 +145,13 @@ function ArtisanDetail() {
           <button className="size-12 border-2 border-brand-green text-brand-green rounded-xl flex items-center justify-center shrink-0" aria-label="Call in-app">
             <Phone size={18} />
           </button>
-          <button className="size-12 border-2 border-brand-green text-brand-green rounded-xl flex items-center justify-center shrink-0" aria-label="Message">
-            <MessageCircle size={18} />
-          </button>
+          <Link
+            to="/dm/$artisanId"
+            params={{ artisanId: a.id }}
+            className="flex-1 border-2 border-brand-green text-brand-green font-bold rounded-xl flex items-center justify-center gap-2"
+          >
+            <MessageCircle size={16} /> Chat
+          </Link>
           <Link
             to="/book/$id"
             params={{ id: a.id }}
