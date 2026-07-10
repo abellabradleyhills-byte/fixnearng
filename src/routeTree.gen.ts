@@ -25,7 +25,6 @@ import { Route as DmArtisanIdRouteImport } from './routes/dm.$artisanId'
 import { Route as ChatJobIdRouteImport } from './routes/chat.$jobId'
 import { Route as BookIdRouteImport } from './routes/book.$id'
 import { Route as ArtisanIdRouteImport } from './routes/artisan.$id'
-import { Route as DmArtisanIdRouteImport } from './routes/dm.$artisanId'
 
 const WalletRoute = WalletRouteImport.update({
   id: '/wallet',
