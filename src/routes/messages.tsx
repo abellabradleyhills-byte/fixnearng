@@ -101,7 +101,7 @@ function Messages() {
             )
           ) : direct.length === 0 ? (
             <div>
-              <Empty label="Start a conversation with an artisan." cta={{ to: "/search", label: "Browse artisans" }} />
+              <Empty label="Start a conversation with an artisan." ctaLabel="Browse artisans" />
               <div className="mt-6">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1 mb-2">Suggested</p>
                 <div className="space-y-2">
