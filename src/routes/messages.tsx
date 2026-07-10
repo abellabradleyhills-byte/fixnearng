@@ -284,14 +284,14 @@ function DirectRow({ thread }: { thread: DirectThread }) {
   );
 }
 
-function Empty({ label, cta }: { label: string; cta?: { to: string; label: string } }) {
+function Empty({ label, ctaLabel }: { label: string; ctaLabel?: string }) {
   return (
     <div className="mt-10 text-center text-muted-foreground py-8">
       <MessageSquare size={40} className="mx-auto opacity-30" />
       <p className="text-sm mt-3">{label}</p>
-      {cta && (
-        <Link to={cta.to} className="mt-4 inline-flex items-center px-5 py-2.5 rounded-full bg-brand-green text-white text-xs font-bold">
-          {cta.label}
+      {ctaLabel && (
+        <Link to="/search" className="mt-4 inline-flex items-center px-5 py-2.5 rounded-full bg-brand-green text-white text-xs font-bold">
+          {ctaLabel}
         </Link>
       )}
     </div>
