@@ -1,13 +1,23 @@
 import { useSyncExternalStore } from "react";
 import { getPrefs } from "./prefs";
+import { ARTISANS, getArtisan } from "./artisans";
 
 export type JobStatus = "pending" | "confirmed" | "enroute" | "completed" | "paid";
+
+export type MsgAttachment =
+  | { kind: "image"; url: string; caption?: string }
+  | { kind: "voice"; url?: string; duration: number }
+  | { kind: "location"; label: string; lat?: number; lng?: number }
+  | { kind: "file"; name: string; size: number; url?: string };
 
 export type ChatMsg = {
   id: string;
   from: "customer" | "artisan";
   text: string;
   at: number;
+  read?: boolean;
+  attachment?: MsgAttachment;
+  reactions?: string[];
 };
 
 export type MaterialsRequest = {
@@ -28,11 +38,26 @@ export type Job = {
   isEmergency: boolean;
   status: JobStatus;
   createdAt: number;
+  scheduledAt?: number;
+  eta?: string;
   materials?: MaterialsRequest;
   finalAmount?: number;
   finalPaid: boolean;
   review?: { rating: number; text: string };
   messages: ChatMsg[];
+  unread?: number;
+};
+
+export type DirectThread = {
+  id: string;
+  artisanId: string;
+  artisanName: string;
+  artisanPhoto: string;
+  category: string;
+  messages: ChatMsg[];
+  unread: number;
+  lastSeenAt: number;
+  online: boolean;
 };
 
 export type Tx = {
@@ -75,16 +100,18 @@ type State = {
   wallet: { balance: number; deposited: number; spent: number };
   txs: Tx[];
   jobs: Job[];
+  threads: DirectThread[];
   receipts: Receipt[];
   notifications: Notification[];
   reminders: Reminder[];
   rewards: { points: number; earned: number; redeemed: number };
 };
 
-const KEY = "fixnear:store:v2";
+const KEY = "fixnear:store:v3";
 
 import mechanic from "@/assets/mechanic.jpg";
 import electrician from "@/assets/electrician.jpg";
+import plumber from "@/assets/plumber.jpg";
 
 const initial: State = {
   wallet: { balance: 0, deposited: 0, spent: 0 },
@@ -111,6 +138,23 @@ const initial: State = {
   ],
   reminders: [],
   rewards: { points: 0, earned: 0, redeemed: 0 },
+  threads: [
+    {
+      id: "dm-ifeanyi",
+      artisanId: "ifeanyi-kalu",
+      artisanName: "Ifeanyi Kalu",
+      artisanPhoto: plumber,
+      category: "Plumber",
+      unread: 1,
+      lastSeenAt: Date.now() - 1000 * 60 * 15,
+      online: true,
+      messages: [
+        { id: "d1", from: "customer", text: "Hello sir, do you fix pressure pumps?", at: Date.now() - 1000 * 60 * 60, read: true },
+        { id: "d2", from: "artisan", text: "Yes I do. Which brand be that?", at: Date.now() - 1000 * 60 * 58, read: true },
+        { id: "d3", from: "artisan", text: "Send me a photo make I see am.", at: Date.now() - 1000 * 60 * 3, read: false },
+      ],
+    },
+  ],
   jobs: [
     {
       id: "job-sos-1",
@@ -124,8 +168,10 @@ const initial: State = {
       status: "pending",
       createdAt: Date.now() - 1000 * 60 * 4,
       finalPaid: false,
+      unread: 1,
+      eta: "8 min",
       messages: [
-        { id: "m1", from: "artisan", text: "I received your SOS. Confirming location…", at: Date.now() - 1000 * 60 * 3 },
+        { id: "m1", from: "artisan", text: "I received your SOS. Confirming location…", at: Date.now() - 1000 * 60 * 3, read: false },
       ],
     },
     {
@@ -139,8 +185,11 @@ const initial: State = {
       isEmergency: false,
       status: "confirmed",
       createdAt: Date.now() - 1000 * 60 * 60 * 3,
+      scheduledAt: Date.now() + 1000 * 60 * 60 * 20,
+      eta: "Tomorrow 10:00 AM",
       finalAmount: 25000,
       finalPaid: false,
+      unread: 0,
       materials: {
         amount: 42000,
         description: "2× 200Ah battery, MC4 connectors, 4mm² cable",
@@ -148,8 +197,8 @@ const initial: State = {
         requestedAt: Date.now() - 1000 * 60 * 30,
       },
       messages: [
-        { id: "m1", from: "artisan", text: "Confirmed for tomorrow 10am, sir.", at: Date.now() - 1000 * 60 * 60 * 2 },
-        { id: "m2", from: "artisan", text: "I've sent a materials request — please approve via FixNear Wallet.", at: Date.now() - 1000 * 60 * 30 },
+        { id: "m1", from: "artisan", text: "Confirmed for tomorrow 10am, sir.", at: Date.now() - 1000 * 60 * 60 * 2, read: true },
+        { id: "m2", from: "artisan", text: "I've sent a materials request — please approve via FixNear Wallet.", at: Date.now() - 1000 * 60 * 30, read: true },
       ],
     },
   ],
@@ -174,6 +223,10 @@ function load(): State {
             ? electrician
             : j.artisanPhoto,
     }));
+    merged.threads = (merged.threads || []).map((t) => {
+      const a = getArtisan(t.artisanId);
+      return a ? { ...t, artisanPhoto: a.photo, artisanName: a.name, category: a.category } : t;
+    });
     merged.receipts = merged.receipts || [];
     merged.notifications = merged.notifications || [];
     merged.reminders = merged.reminders || [];
@@ -218,6 +271,14 @@ export function getJob(id: string): Job | undefined {
 
 export function getReceipt(id: string): Receipt | undefined {
   return state.receipts.find((r) => r.id === id);
+}
+
+export function getThread(id: string): DirectThread | undefined {
+  return state.threads.find((t) => t.id === id);
+}
+
+export function getThreadByArtisan(artisanId: string): DirectThread | undefined {
+  return state.threads.find((t) => t.artisanId === artisanId);
 }
 
 // ---------- Notifications ----------
@@ -325,22 +386,121 @@ function makeReceipt(job: Job, kind: "materials" | "final", amount: number): Rec
   };
 }
 
-// ---------- Job actions ----------
-export function sendMessage(jobId: string, text: string, from: ChatMsg["from"] = "customer") {
+// ---------- Job chat ----------
+export function sendMessage(
+  jobId: string,
+  text: string,
+  from: ChatMsg["from"] = "customer",
+  attachment?: MsgAttachment,
+) {
   const trimmed = text.trim();
-  if (!trimmed) return;
+  if (!trimmed && !attachment) return;
   const job = getJob(jobId);
   set((s) => ({
     ...s,
     jobs: s.jobs.map((j) =>
       j.id === jobId
-        ? { ...j, messages: [...j.messages, { id: crypto.randomUUID(), from, text: trimmed, at: Date.now() }] }
+        ? {
+            ...j,
+            unread: from === "artisan" ? (j.unread ?? 0) + 1 : j.unread,
+            messages: [
+              ...j.messages,
+              { id: crypto.randomUUID(), from, text: trimmed, at: Date.now(), attachment, read: from === "customer" },
+            ],
+          }
         : j,
     ),
   }));
   if (job && from === "artisan") {
-    pushNotification("chat", `${job.artisanName}`, trimmed, jobId);
+    pushNotification("chat", `${job.artisanName}`, trimmed || attachmentPreview(attachment), jobId);
   }
+}
+
+export function markJobRead(jobId: string) {
+  set((s) => ({
+    ...s,
+    jobs: s.jobs.map((j) =>
+      j.id === jobId
+        ? { ...j, unread: 0, messages: j.messages.map((m) => ({ ...m, read: true })) }
+        : j,
+    ),
+  }));
+}
+
+// ---------- Direct messages ----------
+function attachmentPreview(a?: MsgAttachment): string {
+  if (!a) return "";
+  if (a.kind === "image") return "📷 Photo";
+  if (a.kind === "voice") return `🎤 Voice note · ${a.duration}s`;
+  if (a.kind === "location") return `📍 ${a.label}`;
+  return `📎 ${a.name}`;
+}
+
+export function startDirectThread(artisanId: string): string {
+  const existing = getThreadByArtisan(artisanId);
+  if (existing) return existing.id;
+  const a = ARTISANS.find((x) => x.id === artisanId);
+  if (!a) return "";
+  const id = `dm-${artisanId}`;
+  set((s) => ({
+    ...s,
+    threads: [
+      {
+        id,
+        artisanId,
+        artisanName: a.name,
+        artisanPhoto: a.photo,
+        category: a.category,
+        messages: [],
+        unread: 0,
+        lastSeenAt: Date.now(),
+        online: Math.random() > 0.4,
+      },
+      ...s.threads,
+    ],
+  }));
+  return id;
+}
+
+export function sendDirectMessage(
+  threadId: string,
+  text: string,
+  from: ChatMsg["from"] = "customer",
+  attachment?: MsgAttachment,
+) {
+  const trimmed = text.trim();
+  if (!trimmed && !attachment) return;
+  const thread = getThread(threadId);
+  set((s) => ({
+    ...s,
+    threads: s.threads.map((t) =>
+      t.id === threadId
+        ? {
+            ...t,
+            unread: from === "artisan" ? t.unread + 1 : t.unread,
+            lastSeenAt: Date.now(),
+            messages: [
+              ...t.messages,
+              { id: crypto.randomUUID(), from, text: trimmed, at: Date.now(), attachment, read: from === "customer" },
+            ],
+          }
+        : t,
+    ),
+  }));
+  if (thread && from === "artisan") {
+    pushNotification("chat", thread.artisanName, trimmed || attachmentPreview(attachment));
+  }
+}
+
+export function markThreadRead(threadId: string) {
+  set((s) => ({
+    ...s,
+    threads: s.threads.map((t) =>
+      t.id === threadId
+        ? { ...t, unread: 0, messages: t.messages.map((m) => ({ ...m, read: true })) }
+        : t,
+    ),
+  }));
 }
 
 export function payMaterials(jobId: string): { ok: boolean; error?: string; receiptId?: string } {
@@ -403,6 +563,17 @@ export function advanceStatus(jobId: string) {
     };
     pushNotification("job", map[nextJob.status], `${nextJob.artisanName} — ${nextJob.title}`, jobId);
   }
+}
+
+export function markJobCompleted(jobId: string) {
+  const job = getJob(jobId);
+  if (!job) return;
+  if (job.status === "completed" || job.status === "paid") return;
+  set((s) => ({
+    ...s,
+    jobs: s.jobs.map((j) => (j.id === jobId ? { ...j, status: "completed" } : j)),
+  }));
+  pushNotification("job", "Job marked complete", `${job.artisanName} — pay to finish.`, jobId);
 }
 
 export function submitReview(jobId: string, rating: number, text: string): { ok: boolean; error?: string } {
