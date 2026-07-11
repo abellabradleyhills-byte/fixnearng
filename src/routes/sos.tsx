@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { ARTISANS } from "@/lib/artisans";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { useLocation, requestGeolocation } from "@/lib/location";
 import { ArrowLeft, MapPin, Phone, Siren } from "lucide-react";
 
 export const Route = createFileRoute("/sos")({
@@ -16,6 +17,11 @@ export const Route = createFileRoute("/sos")({
 
 function SosPage() {
   const [seconds, setSeconds] = useState(0);
+  const loc = useLocation();
+  useEffect(() => {
+    // Refresh GPS the moment SOS opens so responders get an accurate fix.
+    void requestGeolocation({ watch: true });
+  }, []);
   useEffect(() => {
     const id = setInterval(() => setSeconds((s) => s + 1), 1000);
     return () => clearInterval(id);
@@ -53,7 +59,12 @@ function SosPage() {
 
           <div className="mt-5 inline-flex items-center gap-2 bg-white/15 rounded-full px-4 py-2 text-xs">
             <MapPin size={12} />
-            <span>Third Mainland Bridge, Lagos · 6.5244°N, 3.3792°E</span>
+            <span>
+              {loc.full || loc.label}
+              {loc.lat && loc.lng
+                ? ` · ${loc.lat.toFixed(4)}°N, ${loc.lng.toFixed(4)}°E`
+                : ""}
+            </span>
           </div>
         </section>
 

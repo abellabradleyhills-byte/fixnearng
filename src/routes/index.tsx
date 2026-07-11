@@ -1,10 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { ARTISANS, CATEGORIES } from "@/lib/artisans";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { BottomNav } from "@/components/BottomNav";
 import { PhoneFrame } from "@/components/PhoneFrame";
+import { LocationPicker } from "@/components/LocationPicker";
 import { useStore } from "@/lib/store";
-import { Search, MapPin, Siren, Star, Bell, ShieldCheck } from "lucide-react";
+import { useLocation, requestGeolocation, startWatch, getLocation } from "@/lib/location";
+import { Search, MapPin, Siren, Star, Bell, ShieldCheck, ChevronDown } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -22,20 +25,40 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const featured = ARTISANS.slice(0, 3);
+  const loc = useLocation();
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  // Auto-request location on first visit; resume watch on subsequent visits.
+  useEffect(() => {
+    const cur = getLocation();
+    if (cur.source === "default") {
+      void requestGeolocation({ watch: true });
+    } else {
+      startWatch();
+    }
+  }, []);
 
   return (
     <PhoneFrame>
       <div className="pb-32 animate-screen-entry">
         {/* Header */}
         <header className="px-5 pt-10 pb-4 flex items-center justify-between">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-              <MapPin size={12} className="text-brand-green" /> Lekki Phase 1, Lagos
-            </p>
+          <div className="min-w-0 flex-1">
+            <button
+              onClick={() => setPickerOpen(true)}
+              className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1 max-w-full"
+            >
+              <MapPin size={12} className="text-brand-green shrink-0" />
+              <span className="truncate normal-case tracking-normal text-foreground font-bold">
+                {loc.label}
+              </span>
+              <ChevronDown size={12} className="shrink-0" />
+            </button>
             <h1 className="text-2xl font-display font-bold mt-0.5">Good afternoon, Adebayo 👋</h1>
           </div>
           <NotifBell />
         </header>
+        <LocationPicker open={pickerOpen} onClose={() => setPickerOpen(false)} />
 
         {/* Search */}
         <div className="px-5 mt-2">
