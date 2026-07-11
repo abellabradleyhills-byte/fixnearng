@@ -17,6 +17,11 @@ export const Route = createFileRoute("/sos")({
 
 function SosPage() {
   const [seconds, setSeconds] = useState(0);
+  const loc = useLocation();
+  useEffect(() => {
+    // Refresh GPS the moment SOS opens so responders get an accurate fix.
+    void requestGeolocation({ watch: true });
+  }, []);
   useEffect(() => {
     const id = setInterval(() => setSeconds((s) => s + 1), 1000);
     return () => clearInterval(id);
