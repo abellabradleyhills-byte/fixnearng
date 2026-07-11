@@ -22,6 +22,9 @@ function SearchPage() {
   const [view, setView] = useState<"list" | "map">("map");
   const [category, setCategory] = useState<string>("All");
   const [query, setQuery] = useState("");
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const loc = useLocation();
+  const cityLabel = loc.city || loc.state || "Nigeria";
 
   const results = ARTISANS.filter((a) =>
     (category === "All" || a.category === category) &&
@@ -41,7 +44,7 @@ function SearchPage() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search in Lagos…"
+              placeholder={`Search in ${cityLabel}…`}
               className="w-full h-10 pl-9 pr-3 bg-muted border border-border rounded-xl text-sm outline-none focus:ring-2 ring-brand-green/20"
             />
           </div>
@@ -49,13 +52,17 @@ function SearchPage() {
             <SlidersHorizontal size={16} />
           </button>
         </header>
+        <LocationPicker open={pickerOpen} onClose={() => setPickerOpen(false)} />
 
         {/* Location + view toggle */}
         <div className="px-5 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <MapPin size={12} className="text-brand-green" />
-            <span className="font-semibold text-foreground">Ikeja, Lagos</span>
-            <span>· within 5 km</span>
+          <button
+            onClick={() => setPickerOpen(true)}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground min-w-0"
+          >
+            <MapPin size={12} className="text-brand-green shrink-0" />
+            <span className="font-semibold text-foreground truncate max-w-[180px]">{loc.label}</span>
+            <span className="shrink-0">· within 5 km</span>
           </div>
           <div className="flex p-0.5 bg-muted rounded-lg border border-border">
             <button
