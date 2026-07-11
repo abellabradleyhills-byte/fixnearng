@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { ARTISANS } from "@/lib/artisans";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { useLocation, requestGeolocation } from "@/lib/location";
 import { ArrowLeft, MapPin, Phone, Siren } from "lucide-react";
 
 export const Route = createFileRoute("/sos")({
