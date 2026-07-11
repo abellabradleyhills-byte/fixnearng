@@ -59,7 +59,12 @@ function SosPage() {
 
           <div className="mt-5 inline-flex items-center gap-2 bg-white/15 rounded-full px-4 py-2 text-xs">
             <MapPin size={12} />
-            <span>Third Mainland Bridge, Lagos · 6.5244°N, 3.3792°E</span>
+            <span>
+              {loc.full || loc.label}
+              {loc.lat && loc.lng
+                ? ` · ${loc.lat.toFixed(4)}°N, ${loc.lng.toFixed(4)}°E`
+                : ""}
+            </span>
           </div>
         </section>
 
