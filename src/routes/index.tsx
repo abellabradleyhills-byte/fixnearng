@@ -1,10 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { ARTISANS, CATEGORIES } from "@/lib/artisans";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { BottomNav } from "@/components/BottomNav";
 import { PhoneFrame } from "@/components/PhoneFrame";
+import { LocationPicker } from "@/components/LocationPicker";
 import { useStore } from "@/lib/store";
-import { Search, MapPin, Siren, Star, Bell, ShieldCheck } from "lucide-react";
+import { useLocation, requestGeolocation, startWatch, getLocation } from "@/lib/location";
+import { Search, MapPin, Siren, Star, Bell, ShieldCheck, ChevronDown } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
