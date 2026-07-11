@@ -63,7 +63,7 @@ function SearchPage() {
             <MapPin size={12} className="text-brand-green shrink-0" />
             <span className="font-semibold text-foreground truncate max-w-[180px]">{loc.label}</span>
             <span className="shrink-0">· within 5 km</span>
-          </div>
+          </button>
           <div className="flex p-0.5 bg-muted rounded-lg border border-border">
             <button
               onClick={() => setView("map")}
