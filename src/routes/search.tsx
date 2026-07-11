@@ -4,6 +4,8 @@ import { ARTISANS, CATEGORIES } from "@/lib/artisans";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { BottomNav } from "@/components/BottomNav";
 import { PhoneFrame } from "@/components/PhoneFrame";
+import { LocationPicker } from "@/components/LocationPicker";
+import { useLocation } from "@/lib/location";
 import { Search, Star, SlidersHorizontal, MapPin, ArrowLeft, Layers } from "lucide-react";
 
 export const Route = createFileRoute("/search")({
