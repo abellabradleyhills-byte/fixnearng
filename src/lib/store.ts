@@ -641,7 +641,7 @@ export function respondProposal(
         : j,
     ),
   }));
-  if (response === "accepted" && accepted && accepted.kind === "proposal") {
+  if (response === "accepted" && accepted) {
     submitAgreementForApproval(jobId, accepted);
   }
 }
