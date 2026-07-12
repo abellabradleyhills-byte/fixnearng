@@ -726,7 +726,7 @@ export function adminDecide(jobId: string, decision: "approved" | "rejected", no
   );
 }
 
-
+export function payMaterials(jobId: string): { ok: boolean; error?: string; receiptId?: string } {
   const job = getJob(jobId);
   if (!job?.materials) return { ok: false, error: "No materials request" };
   if (job.materials.paid) return { ok: false, error: "Already paid" };
