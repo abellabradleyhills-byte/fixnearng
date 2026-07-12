@@ -55,6 +55,7 @@ function ChatPage() {
   const job = useStore((s) => s.jobs.find((j) => j.id === jobId));
   const [typing, setTyping] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(true);
+  const [negotiateOpen, setNegotiateOpen] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
