@@ -26,6 +26,10 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  Handshake,
+  Plus,
+  Trash2,
+  X,
 } from "lucide-react";
 
 export const Route = createFileRoute("/chat/$jobId")({
