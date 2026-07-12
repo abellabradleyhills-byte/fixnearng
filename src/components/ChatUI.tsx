@@ -95,15 +95,18 @@ function AttachmentView({ a }: { a: MsgAttachment }) {
       </div>
     );
   }
-  return (
-    <div className="mb-1 rounded-xl bg-black/5 dark:bg-white/10 p-2 flex items-center gap-2">
-      <Paperclip size={16} />
-      <div className="min-w-0">
-        <p className="text-xs font-bold truncate">{a.name}</p>
-        <p className="text-[10px] opacity-70">{(a.size / 1024).toFixed(0)} KB</p>
+  if (a.kind === "file") {
+    return (
+      <div className="mb-1 rounded-xl bg-black/5 dark:bg-white/10 p-2 flex items-center gap-2">
+        <Paperclip size={16} />
+        <div className="min-w-0">
+          <p className="text-xs font-bold truncate">{a.name}</p>
+          <p className="text-[10px] opacity-70">{(a.size / 1024).toFixed(0)} KB</p>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
+  return null;
 }
 
 export function TypingDots() {
