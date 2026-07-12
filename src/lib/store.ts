@@ -608,9 +608,9 @@ export function respondProposal(
         ...j,
         messages: j.messages.map((m) => {
           if (m.attachment?.kind === "proposal" && m.attachment.id === proposalId) {
-            const updated = { ...m.attachment, status: response } as MsgAttachment;
+            const updated = { ...m.attachment, status: response };
             if (response === "accepted") accepted = updated;
-            return { ...m, attachment: updated };
+            return { ...m, attachment: updated as MsgAttachment };
           }
           return m;
         }),
