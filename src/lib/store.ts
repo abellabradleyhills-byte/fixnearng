@@ -457,6 +457,7 @@ function attachmentPreview(a?: MsgAttachment): string {
   if (a.kind === "image") return "📷 Photo";
   if (a.kind === "voice") return `🎤 Voice note · ${a.duration}s`;
   if (a.kind === "location") return `📍 ${a.label}`;
+  if (a.kind === "proposal") return `💬 Price proposal · ₦${a.total.toLocaleString()}`;
   return `📎 ${a.name}`;
 }
 
