@@ -222,6 +222,14 @@ function ChatPage() {
 
         {/* Action buttons */}
         <div className="px-3 py-2 flex gap-2 bg-background border-t border-black/5 dark:border-white/10">
+          {!job.negotiation && (
+            <button
+              onClick={() => setNegotiateOpen(true)}
+              className="flex-1 h-10 rounded-full bg-brand-yellow text-amber-900 text-xs font-bold flex items-center justify-center gap-1.5"
+            >
+              <Handshake size={14} /> Negotiate Price
+            </button>
+          )}
           {payDue && (
             <button
               onClick={() =>
@@ -236,14 +244,16 @@ function ChatPage() {
               <WalletIcon size={14} /> Pay ₦{(materialsDue ? job.materials!.amount : job.finalAmount!).toLocaleString()}
             </button>
           )}
-          {(job.status === "enroute" || job.status === "confirmed") && (
-            <button
-              onClick={() => markJobCompleted(job.id)}
-              className="flex-1 h-10 rounded-full border-2 border-brand-green text-brand-green text-xs font-bold flex items-center justify-center gap-1.5"
-            >
-              <CheckCircle2 size={14} /> Job Completed
-            </button>
-          )}
+          {job.negotiation?.adminStatus === "approved" &&
+            !payDue &&
+            (job.status === "enroute" || job.status === "confirmed") && (
+              <button
+                onClick={() => markJobCompleted(job.id)}
+                className="flex-1 h-10 rounded-full border-2 border-brand-green text-brand-green text-xs font-bold flex items-center justify-center gap-1.5"
+              >
+                <CheckCircle2 size={14} /> Job Completed
+              </button>
+            )}
           {job.status === "completed" && !finalDue && (
             <div className="flex-1 h-10 rounded-full bg-brand-green/15 text-brand-green text-xs font-bold flex items-center justify-center">
               Waiting for final invoice
@@ -260,8 +270,135 @@ function ChatPage() {
         </div>
 
         <ChatComposer onSend={send} />
+        {negotiateOpen && (
+          <NegotiateModal
+            onClose={() => setNegotiateOpen(false)}
+            onSend={(data) => {
+              sendProposal(job.id, "customer", data);
+              setNegotiateOpen(false);
+            }}
+          />
+        )}
       </div>
     </PhoneFrame>
+  );
+}
+
+function NegotiateModal({
+  onClose,
+  onSend,
+}: {
+  onClose: () => void;
+  onSend: (data: { breakdown: ProposalLine[]; materialsUpfront: number; note?: string }) => void;
+}) {
+  const [lines, setLines] = useState<ProposalLine[]>([
+    { label: "Materials & parts", amount: 15000 },
+    { label: "Labour", amount: 10000 },
+  ]);
+  const [materials, setMaterials] = useState(15000);
+  const [note, setNote] = useState("");
+  const total = lines.reduce((s, l) => s + (Number(l.amount) || 0), 0);
+
+  const update = (i: number, patch: Partial<ProposalLine>) =>
+    setLines((ls) => ls.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
+  const add = () => setLines((ls) => [...ls, { label: "", amount: 0 }]);
+  const remove = (i: number) => setLines((ls) => ls.filter((_, idx) => idx !== i));
+
+  return (
+    <div className="absolute inset-0 bg-black/50 z-50 flex items-end" onClick={onClose}>
+      <div
+        className="w-full bg-background rounded-t-3xl p-4 max-h-[85vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Handshake size={18} className="text-brand-green" />
+            <h3 className="font-bold">Send price proposal</h3>
+          </div>
+          <button onClick={onClose} className="size-8 rounded-full hover:bg-black/5 flex items-center justify-center">
+            <X size={18} />
+          </button>
+        </div>
+        <p className="text-[11px] text-muted-foreground mb-3">
+          Break down your offer. Once both parties agree, the price is sent to FixNear admin for approval before payment.
+        </p>
+
+        <div className="space-y-2">
+          {lines.map((l, i) => (
+            <div key={i} className="flex gap-2 items-center">
+              <input
+                value={l.label}
+                onChange={(e) => update(i, { label: e.target.value })}
+                placeholder="Item (e.g. Materials, Labour)"
+                className="flex-1 h-9 rounded-lg border border-black/10 dark:border-white/10 bg-muted px-2 text-xs"
+              />
+              <div className="flex items-center gap-1 w-28">
+                <span className="text-xs text-muted-foreground">₦</span>
+                <input
+                  type="number"
+                  value={l.amount || ""}
+                  onChange={(e) => update(i, { amount: Number(e.target.value) || 0 })}
+                  className="w-full h-9 rounded-lg border border-black/10 dark:border-white/10 bg-muted px-2 text-xs tabular-nums"
+                />
+              </div>
+              {lines.length > 1 && (
+                <button onClick={() => remove(i)} className="size-8 text-emergency flex items-center justify-center">
+                  <Trash2 size={14} />
+                </button>
+              )}
+            </div>
+          ))}
+          <button onClick={add} className="text-xs text-brand-green font-bold flex items-center gap-1">
+            <Plus size={14} /> Add line
+          </button>
+        </div>
+
+        <div className="mt-4 p-3 rounded-xl bg-brand-green/10 border border-brand-green/25">
+          <div className="flex justify-between text-sm">
+            <span className="font-bold">Total price</span>
+            <span className="font-bold tabular-nums">₦{total.toLocaleString()}</span>
+          </div>
+        </div>
+
+        <div className="mt-3">
+          <label className="text-xs font-bold text-muted-foreground">Materials upfront (₦)</label>
+          <input
+            type="number"
+            value={materials || ""}
+            onChange={(e) => setMaterials(Number(e.target.value) || 0)}
+            className="w-full h-10 mt-1 rounded-lg border border-black/10 dark:border-white/10 bg-muted px-3 text-sm tabular-nums"
+          />
+          <p className="text-[10px] text-muted-foreground mt-1">
+            Paid via FixNear Wallet after admin approval. Balance ₦{Math.max(0, total - materials).toLocaleString()} due on job completion.
+          </p>
+        </div>
+
+        <div className="mt-3">
+          <label className="text-xs font-bold text-muted-foreground">Note (optional)</label>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            rows={2}
+            placeholder="Add context for the artisan / admin"
+            className="w-full mt-1 rounded-lg border border-black/10 dark:border-white/10 bg-muted px-3 py-2 text-sm resize-none"
+          />
+        </div>
+
+        <button
+          disabled={total <= 0 || materials < 0 || materials > total}
+          onClick={() =>
+            onSend({
+              breakdown: lines.filter((l) => l.label.trim() && l.amount > 0),
+              materialsUpfront: materials,
+              note: note.trim() || undefined,
+            })
+          }
+          className="mt-4 w-full h-11 rounded-full bg-brand-green text-white text-sm font-bold disabled:opacity-40"
+        >
+          Send Proposal
+        </button>
+      </div>
+    </div>
   );
 }
 
