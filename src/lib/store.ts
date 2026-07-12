@@ -528,7 +528,205 @@ export function markThreadRead(threadId: string) {
   }));
 }
 
-export function payMaterials(jobId: string): { ok: boolean; error?: string; receiptId?: string } {
+// ---------- Price negotiation ----------
+export function sendProposal(
+  jobId: string,
+  by: "customer" | "artisan",
+  data: { breakdown: ProposalLine[]; materialsUpfront: number; note?: string },
+) {
+  const total = data.breakdown.reduce((s, l) => s + (l.amount || 0), 0);
+  if (total <= 0) return;
+  const proposalId = crypto.randomUUID();
+  const attachment: MsgAttachment = {
+    kind: "proposal",
+    id: proposalId,
+    by,
+    total,
+    materialsUpfront: Math.min(data.materialsUpfront, total),
+    breakdown: data.breakdown,
+    note: data.note,
+    status: "pending",
+  };
+  const job = getJob(jobId);
+  set((s) => ({
+    ...s,
+    jobs: s.jobs.map((j) =>
+      j.id === jobId
+        ? {
+            ...j,
+            messages: [
+              ...j.messages,
+              {
+                id: crypto.randomUUID(),
+                from: by,
+                text: `Proposed price ₦${total.toLocaleString()} (₦${data.materialsUpfront.toLocaleString()} materials upfront).`,
+                at: Date.now(),
+                attachment,
+                read: by === "customer",
+              },
+            ],
+          }
+        : j,
+    ),
+  }));
+  if (job && by === "artisan") {
+    pushNotification("chat", job.artisanName, `New price proposal · ₦${total.toLocaleString()}`, jobId);
+  }
+  // Simulate artisan counter/accept when customer proposes
+  if (by === "customer" && getPrefs().chatMessages) {
+    setTimeout(() => {
+      const j = getJob(jobId);
+      if (!j) return;
+      // Accept if reasonable, else counter +10%
+      if (Math.random() > 0.4) {
+        respondProposal(jobId, proposalId, "accepted", "artisan");
+      } else {
+        respondProposal(jobId, proposalId, "countered", "artisan");
+        sendProposal(jobId, "artisan", {
+          breakdown: data.breakdown.map((l) => ({ ...l, amount: Math.round(l.amount * 1.1) })),
+          materialsUpfront: Math.round(data.materialsUpfront * 1.1),
+          note: "Slight adjustment for current material prices.",
+        });
+      }
+    }, 1500);
+  }
+}
+
+export function respondProposal(
+  jobId: string,
+  proposalId: string,
+  response: "accepted" | "countered" | "rejected",
+  by: "customer" | "artisan",
+) {
+  let accepted: MsgAttachment | null = null;
+  set((s) => ({
+    ...s,
+    jobs: s.jobs.map((j) => {
+      if (j.id !== jobId) return j;
+      return {
+        ...j,
+        messages: j.messages.map((m) => {
+          if (m.attachment?.kind === "proposal" && m.attachment.id === proposalId) {
+            const updated = { ...m.attachment, status: response } as MsgAttachment;
+            if (response === "accepted") accepted = updated;
+            return { ...m, attachment: updated };
+          }
+          return m;
+        }),
+      };
+    }),
+  }));
+  const job = getJob(jobId);
+  if (!job) return;
+  const label =
+    response === "accepted" ? "accepted the price" : response === "rejected" ? "rejected the proposal" : "sent a counter-offer";
+  set((s) => ({
+    ...s,
+    jobs: s.jobs.map((j) =>
+      j.id === jobId
+        ? {
+            ...j,
+            messages: [
+              ...j.messages,
+              {
+                id: crypto.randomUUID(),
+                from: "system",
+                text: `${by === "customer" ? "You" : job.artisanName} ${label}.`,
+                at: Date.now(),
+                read: true,
+              },
+            ],
+          }
+        : j,
+    ),
+  }));
+  if (response === "accepted" && accepted && accepted.kind === "proposal") {
+    submitAgreementForApproval(jobId, accepted);
+  }
+}
+
+function submitAgreementForApproval(jobId: string, p: Extract<MsgAttachment, { kind: "proposal" }>) {
+  const negotiation: Negotiation = {
+    agreedTotal: p.total,
+    materialsUpfront: p.materialsUpfront,
+    breakdown: p.breakdown,
+    proposalId: p.id,
+    adminStatus: "pending",
+    submittedAt: Date.now(),
+  };
+  set((s) => ({
+    ...s,
+    jobs: s.jobs.map((j) =>
+      j.id === jobId
+        ? {
+            ...j,
+            negotiation,
+            messages: [
+              ...j.messages,
+              {
+                id: crypto.randomUUID(),
+                from: "system",
+                text: `Agreed price ₦${p.total.toLocaleString()} sent to FixNear admin for approval.`,
+                at: Date.now(),
+                read: true,
+              },
+            ],
+          }
+        : j,
+    ),
+  }));
+  pushNotification("job", "Price sent for approval", `₦${p.total.toLocaleString()} awaiting FixNear review.`, jobId);
+  // Simulate admin approval
+  setTimeout(() => adminDecide(jobId, "approved"), 3000);
+}
+
+export function adminDecide(jobId: string, decision: "approved" | "rejected", note?: string) {
+  const job = getJob(jobId);
+  if (!job?.negotiation) return;
+  const neg = job.negotiation;
+  set((s) => ({
+    ...s,
+    jobs: s.jobs.map((j) => {
+      if (j.id !== jobId || !j.negotiation) return j;
+      const updated: Job = {
+        ...j,
+        negotiation: { ...j.negotiation, adminStatus: decision, decidedAt: Date.now(), adminNote: note },
+      };
+      if (decision === "approved") {
+        const materialsAmount = neg.materialsUpfront;
+        updated.materials = {
+          amount: materialsAmount,
+          description: neg.breakdown.filter((l) => /material|part/i.test(l.label)).map((l) => l.label).join(", ") || "Materials & parts",
+          paid: false,
+          requestedAt: Date.now(),
+        };
+        updated.finalAmount = Math.max(0, neg.agreedTotal - materialsAmount);
+      }
+      updated.messages = [
+        ...j.messages,
+        {
+          id: crypto.randomUUID(),
+          from: "system",
+          text:
+            decision === "approved"
+              ? `FixNear admin approved the price. Pay ₦${neg.materialsUpfront.toLocaleString()} materials upfront to begin.`
+              : `FixNear admin rejected the price${note ? `: ${note}` : "."}`,
+          at: Date.now(),
+          read: false,
+        },
+      ];
+      return updated;
+    }),
+  }));
+  pushNotification(
+    "job",
+    decision === "approved" ? "Price approved" : "Price rejected",
+    decision === "approved" ? "Pay materials upfront to start the job." : note || "Please negotiate again.",
+    jobId,
+  );
+}
+
+
   const job = getJob(jobId);
   if (!job?.materials) return { ok: false, error: "No materials request" };
   if (job.materials.paid) return { ok: false, error: "Already paid" };
