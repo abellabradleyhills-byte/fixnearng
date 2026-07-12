@@ -152,6 +152,29 @@ function ChatPage() {
           <ShieldCheck size={11} /> Payments held in FixNear Pay · Released after job done
         </div>
 
+        {job.negotiation && (
+          <div
+            className={`px-4 py-2 text-[11px] flex items-center gap-2 border-b ${
+              job.negotiation.adminStatus === "approved"
+                ? "bg-brand-green/15 border-brand-green/30 text-brand-green"
+                : job.negotiation.adminStatus === "rejected"
+                  ? "bg-emergency/10 border-emergency/30 text-emergency"
+                  : "bg-brand-yellow/20 border-brand-yellow/40 text-amber-900 dark:text-brand-yellow"
+            }`}
+          >
+            <ShieldCheck size={12} />
+            <span className="font-bold">
+              {job.negotiation.adminStatus === "approved" && "Admin approved"}
+              {job.negotiation.adminStatus === "pending" && "Admin review pending"}
+              {job.negotiation.adminStatus === "rejected" && "Admin rejected"}
+            </span>
+            <span className="opacity-80">
+              · Agreed ₦{job.negotiation.agreedTotal.toLocaleString()} · Materials ₦
+              {job.negotiation.materialsUpfront.toLocaleString()}
+            </span>
+          </div>
+        )}
+
         {/* Messages */}
         <div ref={listRef} className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
           {job.messages.length === 0 && (
@@ -161,6 +184,34 @@ function ChatPage() {
           )}
           {job.messages.map((m, i) => {
             const prev = job.messages[i - 1];
+            if (m.from === "system") {
+              return (
+                <div key={m.id} className="flex justify-center my-1.5">
+                  <span className="text-[10px] text-muted-foreground bg-black/5 dark:bg-white/10 px-2.5 py-1 rounded-full">
+                    {m.text}
+                  </span>
+                </div>
+              );
+            }
+            if (m.attachment?.kind === "proposal") {
+              const p = m.attachment;
+              const mine = m.from === "customer";
+              const time = new Date(m.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+              return (
+                <ProposalCard
+                  key={m.id}
+                  p={p}
+                  mine={mine}
+                  time={time}
+                  onAccept={() => respondProposal(job.id, p.id, "accepted", "customer")}
+                  onReject={() => respondProposal(job.id, p.id, "rejected", "customer")}
+                  onCounter={() => {
+                    respondProposal(job.id, p.id, "countered", "customer");
+                    setNegotiateOpen(true);
+                  }}
+                />
+              );
+            }
             const showAvatar = m.from === "artisan" && (!prev || prev.from !== m.from);
             return (
               <MessageBubble key={m.id} msg={m} showAvatar={showAvatar} avatarSrc={job.artisanPhoto} variant="job" />
