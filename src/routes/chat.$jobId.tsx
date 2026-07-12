@@ -1,9 +1,20 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import { PhoneFrame } from "@/components/PhoneFrame";
-import { getJob, markJobCompleted, markJobRead, sendMessage, useStore, type MsgAttachment } from "@/lib/store";
+import {
+  getJob,
+  markJobCompleted,
+  markJobRead,
+  respondProposal,
+  sendMessage,
+  sendProposal,
+  useStore,
+  type MsgAttachment,
+  type ProposalLine,
+} from "@/lib/store";
 import { getPrefs } from "@/lib/prefs";
 import { ChatComposer, MessageBubble, TypingDots } from "@/components/ChatUI";
+import { ProposalCard } from "@/components/ProposalCard";
 import { useState } from "react";
 import {
   ChevronLeft,
