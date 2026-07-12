@@ -4,20 +4,44 @@ import { ARTISANS, getArtisan } from "./artisans";
 
 export type JobStatus = "pending" | "confirmed" | "enroute" | "completed" | "paid";
 
+export type ProposalLine = { label: string; amount: number };
+export type ProposalStatus = "pending" | "accepted" | "countered" | "rejected";
+
 export type MsgAttachment =
   | { kind: "image"; url: string; caption?: string }
   | { kind: "voice"; url?: string; duration: number }
   | { kind: "location"; label: string; lat?: number; lng?: number }
-  | { kind: "file"; name: string; size: number; url?: string };
+  | { kind: "file"; name: string; size: number; url?: string }
+  | {
+      kind: "proposal";
+      id: string;
+      by: "customer" | "artisan";
+      total: number;
+      materialsUpfront: number;
+      breakdown: ProposalLine[];
+      note?: string;
+      status: ProposalStatus;
+    };
 
 export type ChatMsg = {
   id: string;
-  from: "customer" | "artisan";
+  from: "customer" | "artisan" | "system";
   text: string;
   at: number;
   read?: boolean;
   attachment?: MsgAttachment;
   reactions?: string[];
+};
+
+export type Negotiation = {
+  agreedTotal: number;
+  materialsUpfront: number;
+  breakdown: ProposalLine[];
+  proposalId: string;
+  adminStatus: "pending" | "approved" | "rejected";
+  submittedAt: number;
+  decidedAt?: number;
+  adminNote?: string;
 };
 
 export type MaterialsRequest = {
