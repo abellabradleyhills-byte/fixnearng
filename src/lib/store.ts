@@ -68,6 +68,7 @@ export type Job = {
   finalAmount?: number;
   finalPaid: boolean;
   review?: { rating: number; text: string };
+  negotiation?: Negotiation;
   messages: ChatMsg[];
   unread?: number;
 };
