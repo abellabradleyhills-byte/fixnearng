@@ -599,7 +599,7 @@ export function respondProposal(
   response: "accepted" | "countered" | "rejected",
   by: "customer" | "artisan",
 ) {
-  let accepted: MsgAttachment | null = null;
+  let accepted: Extract<MsgAttachment, { kind: "proposal" }> | null = null;
   set((s) => ({
     ...s,
     jobs: s.jobs.map((j) => {
